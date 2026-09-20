@@ -1,12 +1,14 @@
+
 using System.Collections.Generic;
 using System.Linq;
-using HarmonyLib;
+using UnityEngine;
 
 namespace OneClickRestock
 {
-    [HarmonyPatch]
-    class HarmonyPatches
+
+    public class PluginBehaviour : MonoBehaviour
     {
+        
         // ---------- NEW: helpers to be tolerant to unknown enum values ----------
         private static List<int> GetOrAddList(Dictionary<int, List<int>> dict, int key)
         {
@@ -34,10 +36,13 @@ namespace OneClickRestock
         // ---------- REPLACED: no more Enum.GetValues seeding ----------
         private static Dictionary<int, List<int>> NewBoxDict() => new Dictionary<int, List<int>>();
         private static Dictionary<int, int> NewCountDict() => new Dictionary<int, int>();
+        
+        private void Awake()
+        {
 
-        [HarmonyPatch(typeof(CGameManager), "Update")]
-        [HarmonyPostfix]
-        public static void GameManagerUpdatePostfix()
+        }
+
+        private void Update()
         {
             var value = Settings.oneClickRestockKey.Value;
 
@@ -69,25 +74,26 @@ namespace OneClickRestock
             };
 
             // Existing boxes
-            foreach (var box in RestockManager.GetItemPackagingBoxListWithItem(true))
+            // foreach (var box in RestockManager.GetItemPackagingBoxListWithItem(true))
+            foreach (var box in RestockManager.GetPackageBoxCandidateList(true))
             {
-                if (box.m_ItemCompartment.GetItemCount() <= 0) continue;
+                if (box.GetItemCount() <= 0) continue;
 
                 int key = (int)box.GetItemType();
 
-                if (!Settings.checkAllPackages.Value && !box.m_IsStored)
+                if (!Settings.checkAllPackages.Value && !box.GetIsStored())
                 {
                     continue;
                 }
-                else if (Settings.checkAllPackages.Value && !box.m_IsStored)
+                else if (Settings.checkAllPackages.Value && !box.GetIsStored())
                 {
-                    GetOrAddList(droppedBoxes[box.m_IsBigBox], key)
-                        .Add(box.m_ItemCompartment.GetMaxItemCount());
+                    GetOrAddList(droppedBoxes[box.GetIsBigBox()], key)
+                        .Add(box.GetMaxItemCount());
                 }
-                else if (box.m_IsStored)
+                else if (box.GetIsStored())
                 {
-                    GetOrAddList(storedBoxes[box.m_IsBigBox], key)
-                        .Add(box.m_ItemCompartment.GetMaxItemCount());
+                    GetOrAddList(storedBoxes[box.GetIsBigBox()], key)
+                        .Add(box.GetMaxItemCount());
                 }
             }
 

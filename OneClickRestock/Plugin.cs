@@ -2,6 +2,7 @@
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
+using UnityEngine;
 
 namespace OneClickRestock
 {
@@ -40,6 +41,12 @@ namespace OneClickRestock
             instance = this;
             // Plugin startup logic
             Logger = base.Logger;
+
+            var go = new GameObject("PluginBehaviour_" + MyPluginInfo.PLUGIN_NAME);
+            DontDestroyOnLoad(go);
+            go.hideFlags = HideFlags.HideAndDontSave;
+            var comp = go.AddComponent<PluginBehaviour>();
+            comp.enabled = true;
 
             Settings.Instance.load(this);
 
