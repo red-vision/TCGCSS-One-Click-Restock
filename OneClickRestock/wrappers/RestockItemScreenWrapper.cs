@@ -54,7 +54,7 @@ namespace OneClickRestock
             var found = UnityEngine.Object.FindObjectsOfType(typeof(RestockItemScreen));
             if (found != null && found.Length > 0)
                 instances.AddRange(found.Where(o => o != null));
-            
+
             FillAllItemsInWindow();
         }
 
@@ -83,32 +83,30 @@ namespace OneClickRestock
         /// <summary>Base API — all act on the first open screen.</summary>
         internal bool HasEnoughCartSlot()
         {
-            var inst = GetActiveInstanceOrThrow();
+            var inst = GetActiveInstanceOrNull();
+            if (inst == null) return false;
             return (bool)methodHasEnoughCartSlot.Invoke(inst, null);
         }
 
         internal Dictionary<int, int> getCartItemList()
         {
-            var inst = GetActiveInstanceOrThrow();
+            var inst = GetActiveInstanceOrNull();
+            if (inst == null) return new();
             return (Dictionary<int, int>)fieldm_CartItemList.GetValue(inst);
         }
 
         internal void AddToCartForCheckout(int index, int boxCount)
         {
-            var inst = GetActiveInstanceOrThrow();
+            var inst = GetActiveInstanceOrNull();
+            if (inst == null) return;
             methodAddToCartForCheckout.Invoke(inst, new object[] { index, boxCount });
         }
 
         internal void OnPressChangePageButton(int pageIndex)
         {
-            var inst = GetActiveInstanceOrThrow();
+            var inst = GetActiveInstanceOrNull();
+            if (inst == null) return;
             methodOnPressChangePageButton.Invoke(inst, new object[] { pageIndex });
-        }
-
-        internal RestockItemCheckoutScreen GetRestockItemCheckoutScreen()
-        {
-            var inst = GetActiveInstanceOrThrow();
-            return (RestockItemCheckoutScreen)fieldm_RestockItemCheckoutScreen.GetValue(inst);
         }
 
         internal bool IsRestockIndexInPage(int restockIndex)
@@ -119,14 +117,16 @@ namespace OneClickRestock
 
         internal List<int> GetRestockIndicesInTab()
         {
-            var inst = GetActiveInstanceOrThrow();
+            var inst = GetActiveInstanceOrNull();
+            if (inst == null) return new();
             var list = (List<int>)fieldm_CurrentRestockDataIndexList.GetValue(inst);
             return list != null ? list : new List<int>();
         }
 
         internal int GetPageIndex()
         {
-            var inst = GetActiveInstanceOrThrow();
+            var inst = GetActiveInstanceOrNull();
+            if (inst == null) return 0;
             var pageIndex = (int)fieldm_PageIndex.GetValue(inst);
             return pageIndex;
         }
@@ -135,6 +135,9 @@ namespace OneClickRestock
         // --- Helpers ---
         private void FillAllItemsInWindow()
         {
+            if (!instances.Any()) return;
+            if (!instances.Any(IsOpen)) return;
+            
             allItemsInWindow.Clear();
             var oldPage = GetPageIndex();
             for (int p = 0; p < CountPages(); p++)
@@ -156,7 +159,8 @@ namespace OneClickRestock
 
         private int CountPages()
         {
-            var inst = GetActiveInstanceOrThrow();
+            var inst = GetActiveInstanceOrNull();
+            if (inst == null) return 0;
             var list = (List<GameObject>)fieldm_PageButtonHighlightList.GetValue(inst);
             return list.Count();
         }
@@ -170,14 +174,6 @@ namespace OneClickRestock
 
             RefreshScreens();
             return instances.FirstOrDefault(IsOpen);
-        }
-
-        private UnityEngine.Object GetActiveInstanceOrThrow()
-        {
-            var inst = GetActiveInstanceOrNull();
-            if (inst == null)
-                throw new InvalidOperationException("No Restock screen is currently open.");
-            return inst;
         }
 
         // internals
