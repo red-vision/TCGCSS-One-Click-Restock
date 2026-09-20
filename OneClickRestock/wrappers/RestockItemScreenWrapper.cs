@@ -97,6 +97,7 @@ namespace OneClickRestock
 
         internal void AddToCartForCheckout(int index, int boxCount)
         {
+            if(index < 0) return;
             var inst = GetActiveInstanceOrNull();
             if (inst == null) return;
             methodAddToCartForCheckout.Invoke(inst, new object[] { index, boxCount });

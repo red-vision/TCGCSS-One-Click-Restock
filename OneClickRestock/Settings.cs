@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using BepInEx.Configuration;
 using UnityEngine;
 
@@ -23,6 +24,12 @@ namespace OneClickRestock {
 
         public static ConfigEntry<KeyboardShortcut> oneClickRestockKey;
 
+        // Compatibility
+        private static Dictionary<RestockCompatibility, bool> activeCompatibilities = new Dictionary<RestockCompatibility, bool>();
+        private static Dictionary<RestockCompatibility, ConfigEntry<bool>> compatibilities = new Dictionary<RestockCompatibility, ConfigEntry<bool>>();
+        
+        public static RestockCompatibility[] compatibilityTypes = Enum.GetValues(typeof(RestockCompatibility)) as RestockCompatibility[];
+
         public void load(Plugin plugin) {
             this.m_plugin = plugin;
 
@@ -34,6 +41,30 @@ namespace OneClickRestock {
 
             // Hotkeys
             oneClickRestockKey = this.m_plugin.Config.Bind<KeyboardShortcut>("Keybinds", "One Click Restock Key", new KeyboardShortcut(KeyCode.R, Array.Empty<KeyCode>()), "Keyboard Shortcut to automatically fill market cart with missing warehouse items.");
+            
+        }
+
+        public static void activateCompatibility (RestockCompatibility compatibility)
+        {
+            if (!activeCompatibilities.ContainsKey(compatibility))
+            {
+                activeCompatibilities.Add(compatibility, false);
+            }
+            if (!compatibilities.ContainsKey(compatibility))
+            {
+                compatibilities.Add(compatibility, Instance.m_plugin.Config.Bind<bool>("Compatibility Features", compatibility.ToString(), true, new ConfigDescription("Enable features for this mod?", null, [new ConfigurationManagerAttributes{Order=compatibilities.Count + 1}])));
+            }
+            activeCompatibilities[compatibility] = true;
+        }
+
+        public static bool IsCompatibilityActive(RestockCompatibility compatibility)
+        {
+            if (!activeCompatibilities.ContainsKey(compatibility))
+            {
+                activeCompatibilities.Add(compatibility, false);
+                return false;
+            }
+            return activeCompatibilities[compatibility] && compatibilities[compatibility].Value.Equals(true);
         }
     }
 }

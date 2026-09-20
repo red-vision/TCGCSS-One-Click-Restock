@@ -73,27 +73,27 @@ namespace OneClickRestock
                 [false] = NewBoxDict()
             };
 
-            // Existing boxes
-            // foreach (var box in RestockManager.GetItemPackagingBoxListWithItem(true))
-            foreach (var box in RestockManager.GetPackageBoxCandidateList(true))
+            // Existing boxes 
+            // (if GetItemPackagingBoxListWithItem doesnt work anymore, try if GetPackageBoxCandidateList exists)
+            foreach (var box in RestockManager.GetItemPackagingBoxListWithItem(true))
             {
-                if (box.GetItemCount() <= 0) continue;
+                if (box.m_ItemCompartment.GetItemCount() <= 0) continue;
 
                 int key = (int)box.GetItemType();
 
-                if (!Settings.checkAllPackages.Value && !box.GetIsStored())
+                if (!Settings.checkAllPackages.Value && !box.m_IsStored)
                 {
                     continue;
                 }
-                else if (Settings.checkAllPackages.Value && !box.GetIsStored())
+                else if (Settings.checkAllPackages.Value && !box.m_IsStored)
                 {
-                    GetOrAddList(droppedBoxes[box.GetIsBigBox()], key)
-                        .Add(box.GetMaxItemCount());
+                    GetOrAddList(droppedBoxes[box.m_IsBigBox], key)
+                        .Add(box.m_ItemCompartment.GetMaxItemCount());
                 }
-                else if (box.GetIsStored())
+                else if (box.m_IsStored)
                 {
-                    GetOrAddList(storedBoxes[box.GetIsBigBox()], key)
-                        .Add(box.GetMaxItemCount());
+                    GetOrAddList(storedBoxes[box.m_IsBigBox], key)
+                        .Add(box.m_ItemCompartment.GetMaxItemCount());
                 }
             }
 
@@ -233,8 +233,10 @@ namespace OneClickRestock
 
                     if (doCheckIndex)
                     {
-                        if (checkIndexInWindow && !screen.IsRestockIndexInAnyPage(restockIndex.index)) continue;
-                        if (checkIndexInTab    && !screen.IsRestockIndexInPage(restockIndex.index))   continue;
+                        if (checkIndexInWindow && !screen.IsRestockIndexInAnyPage(restockIndex.index)
+                            && !CompatibilityManager.IsRestockIndexInAnyPage(restockIndex)) continue;
+                        if (checkIndexInTab    && !screen.IsRestockIndexInPage(restockIndex.index)
+                            && !CompatibilityManager.IsRestockIndexInPage(restockIndex))   continue;
                     }
 
                     for (int i = 0; i < boxesToBuy; i++)
@@ -259,8 +261,10 @@ namespace OneClickRestock
 
                     if (doCheckIndex)
                     {
-                        if (checkIndexInWindow && !screen.IsRestockIndexInAnyPage(restockIndex.index)) continue;
-                        if (checkIndexInTab    && !screen.IsRestockIndexInPage(restockIndex.index))   continue;
+                        if (checkIndexInWindow && !screen.IsRestockIndexInAnyPage(restockIndex.index)
+                            && !CompatibilityManager.IsRestockIndexInAnyPage(restockIndex)) continue;
+                        if (checkIndexInTab    && !screen.IsRestockIndexInPage(restockIndex.index)
+                            && !CompatibilityManager.IsRestockIndexInPage(restockIndex))   continue;
                     }
 
                     // Use boxes already stored/dropped first
@@ -299,8 +303,10 @@ namespace OneClickRestock
 
                     if (doCheckIndex)
                     {
-                        if (checkIndexInWindow && !screen.IsRestockIndexInAnyPage(restockIndex.index)) continue;
-                        if (checkIndexInTab    && !screen.IsRestockIndexInPage(restockIndex.index))   continue;
+                        if (checkIndexInWindow && !screen.IsRestockIndexInAnyPage(restockIndex.index)
+                            && !CompatibilityManager.IsRestockIndexInAnyPage(restockIndex)) continue;
+                        if (checkIndexInTab    && !screen.IsRestockIndexInPage(restockIndex.index)
+                            && !CompatibilityManager.IsRestockIndexInPage(restockIndex))   continue;
                     }
 
                     if (storedBoxes[false].TryGetValue(key, out var storedList))

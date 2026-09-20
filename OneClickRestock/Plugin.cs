@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using BepInEx;
+using BepInEx.Bootstrap;
 using BepInEx.Logging;
 using HarmonyLib;
 using UnityEngine;
@@ -30,6 +33,7 @@ namespace OneClickRestock
     }
 
     [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
+    [BepInDependency( "EnhancedPrefabLoader", BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
         internal static Plugin instance;
@@ -50,10 +54,28 @@ namespace OneClickRestock
 
             Settings.Instance.load(this);
 
+            chectCompatibilities();
+
             harmony = new Harmony(MyPluginInfo.PLUGIN_NAME);
             harmony.PatchAll();
 
             Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
+        }
+
+        private void chectCompatibilities ()
+        {
+
+            foreach (RestockCompatibility compatibility in Settings.compatibilityTypes)
+            {
+                if (Chainloader.PluginInfos.TryGetValue(compatibility.ToString(), out var prefabLoader))
+                {
+                    Settings.activateCompatibility(compatibility);
+                    CompatibilityManager.SetCompatibilityAssembly(compatibility, prefabLoader.Instance.GetType().Assembly);
+                    Logger.LogInfo($"Activated mod compatibility for: {compatibility.ToString()} {prefabLoader.Metadata.Version}");
+                }
+            }
+
+            CompatibilityManager.Initialize();
         }
 
         public static RestockIndex GetRestockDataIndex(EItemType itemType, RestockOption option)
@@ -74,7 +96,8 @@ namespace OneClickRestock
                     return result;
                 }
             }
-            return result;
+
+            return CompatibilityManager.GetModdedRestockDataIndex(itemType, option, ref result);
         }
     }
 }
