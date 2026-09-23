@@ -14,21 +14,24 @@ namespace OneClickRestock
         public EItemType itemType;
         public int index;
         public bool isBigBox;
+        public bool isLicensed;
         public RestockIndex(bool b)
         {
             itemType = EItemType.None;
             index = -1;
             isBigBox = b;
+            isLicensed = false;
         }
         public RestockIndex(int i, bool b, EItemType t)
         {
             itemType = t;
             index = i;
             isBigBox = b;
+            isLicensed = false;
         }
         public override String ToString()
         {
-            return $"{{ itemType: {itemType}, index: {index}, isBigBox: {isBigBox} }}";
+            return $"{{ itemType: {itemType}, index: {index}, isBigBox: {isBigBox}, isLicensed: {isLicensed} }}";
         }
     }
 
@@ -85,12 +88,11 @@ namespace OneClickRestock
             if (option.Equals(RestockOption.DoNotRestock)) return result;
             for (int i = 0; i < InventoryBase.Instance.m_StockItemData_SO.m_RestockDataList.Count; i++)
             {
-                if (InventoryBase.Instance.m_StockItemData_SO.m_RestockDataList[i].itemType == itemType
-                    && CPlayerData.GetIsItemLicenseUnlocked(i)
-                )
+                if (InventoryBase.Instance.m_StockItemData_SO.m_RestockDataList[i].itemType == itemType)
                 {
                     result.index = i;
                     result.isBigBox = InventoryBase.Instance.m_StockItemData_SO.m_RestockDataList[i].isBigBox;
+                    result.isLicensed = CPlayerData.GetIsItemLicenseUnlocked(i);
                     if (option.Equals(RestockOption.PrioritizeSmallBox) && result.isBigBox) continue;
                     if (option.Equals(RestockOption.PrioritizeBigBox) && !result.isBigBox) continue;
                     return result;

@@ -37,8 +37,9 @@ namespace OneClickRestock {
                     if (!compatibilities[compatibility].IsModdedRestockData(itemType)) continue;
                     RestockIndex moddedResult = result;
                     moddedResult = compatibilities[compatibility].GetRestockDataIndex(itemType, option, ref moddedResult);
-                    if (compatibilities[compatibility].GetIsItemLicenseUnlocked(moddedResult))
+                    if (moddedResult.index != -1)
                     {
+                        moddedResult.isLicensed = compatibilities[compatibility].GetIsItemLicenseUnlocked(moddedResult);
                         result = moddedResult;
                     }
                     return result;

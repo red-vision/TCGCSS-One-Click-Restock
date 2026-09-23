@@ -198,21 +198,29 @@ namespace OneClickRestock
                     var restockIndexBig   = Plugin.GetRestockDataIndex((EItemType)key, RestockOption.PrioritizeBigBox);
                     var restockIndexSmall = Plugin.GetRestockDataIndex((EItemType)key, RestockOption.PrioritizeSmallBox);
 
-                    if (restockIndexBig.index == -1 && restockIndexSmall.index == -1) continue;
+                    bool canBuyBig = restockIndexBig.index != -1 && restockIndexBig.isBigBox && restockIndexBig.isLicensed;
+                    bool canBuySmall = restockIndexSmall.index != -1 && !restockIndexSmall.isBigBox && restockIndexSmall.isLicensed;
 
-                    int perBoxBig   = RestockManager.GetMaxItemCountInBox(restockIndexBig.itemType,   restockIndexBig.isBigBox);
-                    int perBoxSmall = RestockManager.GetMaxItemCountInBox(restockIndexSmall.itemType, restockIndexSmall.isBigBox);
+                    int perBoxBig = canBuyBig
+                        ? RestockManager.GetMaxItemCountInBox(restockIndexBig.itemType, restockIndexBig.isBigBox) : 0;
+                    int perBoxSmall = canBuySmall
+                        ? RestockManager.GetMaxItemCountInBox(restockIndexSmall.itemType, restockIndexSmall.isBigBox) : 0;
 
                     if (perBoxBig <= 0 && perBoxSmall <= 0) continue;
-                    if (perBoxSmall > needed) continue; // don't buy if even the small box exceeds deficit
 
                     RestockIndex restockIndex;
                     int perBox;
 
-                    if (perBoxBig > needed)
+                    if (perBoxBig <= 0 || perBoxBig > needed)
                     {
+                        if (perBoxSmall <= 0 || perBoxSmall > needed) continue;
                         restockIndex = restockIndexSmall;
                         perBox = perBoxSmall;
+                    }
+                    else if (perBoxSmall <= 0)
+                    {
+                        restockIndex = restockIndexBig;
+                        perBox = perBoxBig;
                     }
                     else
                     {
@@ -257,7 +265,7 @@ namespace OneClickRestock
                 {
                     int key = entry.Key;
                     var restockIndex = Plugin.GetRestockDataIndex((EItemType)key, RestockOption.PrioritizeBigBox);
-                    if (restockIndex.index == -1 || !restockIndex.isBigBox) continue;
+                    if (restockIndex.index == -1 || !restockIndex.isBigBox || !restockIndex.isLicensed) continue;
 
                     if (doCheckIndex)
                     {
@@ -299,7 +307,7 @@ namespace OneClickRestock
                 {
                     int key = entry.Key;
                     var restockIndex = Plugin.GetRestockDataIndex((EItemType)key, RestockOption.PrioritizeSmallBox);
-                    if (restockIndex.index == -1 || restockIndex.isBigBox) continue;
+                    if (restockIndex.index == -1 || restockIndex.isBigBox || !restockIndex.isLicensed) continue;
 
                     if (doCheckIndex)
                     {
